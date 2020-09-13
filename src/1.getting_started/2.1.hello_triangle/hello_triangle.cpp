@@ -44,6 +44,7 @@ const GLchar *fragmentShaderSource = "#version 330 core\n"
  * 当我们打算绘制物体的时候就拿出相应的VAO，绑定它，绘制完物体后，再解绑VAO。
  * */
 GLuint vbo, ebo, vao;
+GLuint vbo1, vao1;
 
 bool doInitBeforeGLRenderLoop() {
     GLuint vertexShader;
@@ -118,6 +119,21 @@ bool doInitBeforeGLRenderLoop() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     // 解绑ebo
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    glGenVertexArrays(1, &vao1);
+    glBindVertexArray(vao1);
+
+    glGenBuffers(1, &vbo1);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo1);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(verticies), verticies, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    
+    // 解绑
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     return true;
 }
 
@@ -127,19 +143,25 @@ void onRender() {
 
     // 2. 当我们渲染一个物体时要使用着色器程序
     glUseProgram(shaderProgram);
-    glBindVertexArray(vao);
     // 3. 绘制物体
+    glBindVertexArray(vao);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(vao1);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
     glBindVertexArray(0); // 没必要每次都解绑，可注释掉
 }
 
 void doReleaseAfterRenderLoop() {
     glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &vbo1);
     glDeleteBuffers(1, &ebo);
     glDeleteVertexArrays(1, &vao);
+    glDeleteVertexArrays(1, &vao1);
     glDeleteProgram(shaderProgram);
 }
 
