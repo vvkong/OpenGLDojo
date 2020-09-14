@@ -12,33 +12,48 @@ void onRender();
 bool doInitBeforeGLRenderLoop();
 void doReleaseAfterRenderLoop();
 
-GLfloat verticies[] = {
-    0.5f,  0.0f, 0.0f,
-    0.0f,  0.5,  0.0f,
-    0.0f, -0.5f, 0.0f,
-    -0.5f, 0.0f, 0.0f,
-    -0.5f,-0.5f, 0.0f
+GLfloat verticies[][9] = {
+    {
+        0.5f,  0.0f, 0.0f,
+        0.0f,  0.5,  0.0f,
+        0.0f, -0.5f, 0.0f,
+    },
+    {
+       -0.5f,  0.0f, 0.0f,
+        0.0f,  0.5,  0.0f,
+        0.0f, -0.5f, 0.0f,
+    },
 };
-GLuint indices[] = {
-    1, 2, 3,
-    2, 3, 4
-};
-GLuint shaderProgram;
 
-const GLchar *vertexShaderSource = "#version 330 core\n"
+GLuint shaderProgram[2];
+
+const GLchar *vertexShaderSource1 = "#version 330 core\n"
+"layout (location = 0) in vec3 position;\n"
+"void main()\n"
+"{\n"
+"    gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
+"}\n";
+const GLchar *fragmentShaderSource1 = "#version 330 core\n"
+"out vec4 color;\n"
+"void main()\n"
+"{\n"
+"    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"}\n"
+;
+
+const GLchar *vertexShaderSource2 = "#version 330 core\n"
 "layout (location = 0) in vec3 position;\n"
 "out vec4 vertexColor;"
 "void main()\n"
 "{\n"
 "    gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
-"    vertexColor = vec4(1.0, 0.0, 0.0, 1.0);"
+"    vertexColor = vec4(1.0, 0.0, 1.0, 1.0);"
 "}\n";
-const GLchar *fragmentShaderSource = "#version 330 core\n"
+const GLchar *fragmentShaderSource2 = "#version 330 core\n"
 "in vec4 vertexColor;"
 "out vec4 color;\n"
 "void main()\n"
 "{\n"
-// "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 "    color = vertexColor;"
 "}\n"
 ;
@@ -47,72 +62,72 @@ const GLchar *fragmentShaderSource = "#version 330 core\n"
  * 一般当你打算绘制多个物体时，你首先要生成/配置所有的VAO（和必须的VBO及属性指针)，然后储存它们供后面使用。
  * 当我们打算绘制物体的时候就拿出相应的VAO，绑定它，绘制完物体后，再解绑VAO。
  * */
-GLuint vbo, ebo, vao;
-GLuint vbo1, vao1;
+GLuint vbo[2], vao[2];
 
-bool doInitBeforeGLRenderLoop() {
-    GLuint vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
+GLuint loadShader(const GLchar *shaderSource, GLenum type) {
+    GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &shaderSource, NULL);
+    glCompileShader(shader);
     GLint success;
     GLchar infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if( !success ) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-        return false;
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+        std::cout << "ERROR::FRAGMENT::" << type << "::COPILE_FAILED" << std::endl;
+        glDeleteShader(shader);
+        shader = 0;
     }
+    return shader;
+}
 
-    GLuint fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if( !success ) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FIALED\n" << infoLog << std::endl;
-        return false;
+GLuint loadProgram(const GLchar *vertexSource, const GLchar *fragmentSource) {
+    GLuint vertexShader = loadShader(vertexSource, GL_VERTEX_SHADER);
+    if( vertexShader == 0 ) {
+        return 0;
     }
-
-    shaderProgram = glCreateProgram();
+    GLuint fragmentShader = loadShader(fragmentSource, GL_FRAGMENT_SHADER);
+    if( fragmentShader == 0 ) {
+        return 0;
+    }
+    GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    GLint success;
+    GLchar infoLog[512];
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if( !success ) {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::LINK_PROGRAM_FAILED\n" << infoLog << std::endl;
-        return false;
+        std::cout << "ERROR::FRAGMENT::LINKING_FAILED" << std::endl;
+        glDeleteProgram(shaderProgram);
+        shaderProgram = 0;
     }
-    
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+    return shaderProgram;
+}
 
-
+bool doInitBeforeGLRenderLoop() {
+    shaderProgram[0] = loadProgram(vertexShaderSource1, fragmentShaderSource1);
+    shaderProgram[1] = loadProgram(vertexShaderSource2, fragmentShaderSource2);
+    if( shaderProgram[0] == 0 || shaderProgram[1] == 0 ) {
+        return false;
+    }
     // 顶点数组对象(Vertex Array Object, VAO)
-    glGenVertexArrays(1, &vao);
+    glGenVertexArrays(2, vao);
+    // 顶点缓冲对象，GPU内存(通常被称为显存)中储存大量顶点
+    glGenBuffers(2, vbo);
+
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
     // 绑定vao，任何随后的顶点属性调用都会储存在这个VAO中
-    glBindVertexArray(vao);
+    glBindVertexArray(vao[0]);
 
-    // 顶点缓冲对象，GPU内存(通常被称为显存)中储存大量顶点
-    glGenBuffers(1, &vbo);
     // 使用的任何（在GL_ARRAY_BUFFER目标上的）缓冲调用都会用来配置当前绑定的缓冲(VBO)
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
     // 复制顶点数组到缓冲中供OpenGL使用，即复制到上述绑定的vbo
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verticies), verticies, GL_STATIC_DRAW);
-
-    // 复制我们的索引数组到一个索引缓冲中，供OpenGL使用
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER, sizeof(verticies[0]), verticies[0], GL_STATIC_DRAW);
 
     // 通过glVertexAttribPointer设置的顶点属性配置，进行的顶点缓冲对象与顶点属性链接
-    // vao中attribute_pointer_0指向当前绑定的vbo
-    // vao中element_buffer_object指向当前绑定的ebo
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
     // 要想使用VAO，要做的只是使用glBindVertexArray绑定VAO。从绑定之后起，应该绑定和配置对应的VBO和属性指针，之后解绑VAO供之后使用
@@ -125,17 +140,13 @@ bool doInitBeforeGLRenderLoop() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    glGenVertexArrays(1, &vao1);
-    glBindVertexArray(vao1);
+    glBindVertexArray(vao[1]);
 
-    glGenBuffers(1, &vbo1);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo1);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verticies), verticies, GL_STATIC_DRAW);
-
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(verticies[1]), verticies[1], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
-    
-    // 解绑
+
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     return true;
@@ -145,28 +156,26 @@ void onRender() {
     glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // 2. 当我们渲染一个物体时要使用着色器程序
-    glUseProgram(shaderProgram);
-    // 3. 绘制物体
-    glBindVertexArray(vao);
+    glUseProgram(shaderProgram[0]);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBindVertexArray(vao[0]);
     glDrawArrays(GL_TRIANGLES, 0, 3);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-    glBindVertexArray(vao1);
+    glUseProgram(shaderProgram[1]);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindVertexArray(vao[1]);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glBindVertexArray(0); // 没必要每次都解绑，可注释掉
 }
 
 void doReleaseAfterRenderLoop() {
-    glDeleteBuffers(1, &vbo);
-    glDeleteBuffers(1, &vbo1);
-    glDeleteBuffers(1, &ebo);
-    glDeleteVertexArrays(1, &vao);
-    glDeleteVertexArrays(1, &vao1);
-    glDeleteProgram(shaderProgram);
+    glDeleteBuffers(2, vbo);
+    glDeleteVertexArrays(2, vao);
+    
+    glDeleteProgram(shaderProgram[0]);
+    glDeleteProgram(shaderProgram[1]);
+    
 }
 
 
