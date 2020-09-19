@@ -75,10 +75,10 @@ set(1.getting_started
     3.1.shaders_uniform
     3.2.shaders_interpolation
     3.3.shaders_class
-    # 4.1.textures
-    # 4.2.textures_combined
-    # 4.4.textures_exercise2
-    # 4.5.textures_exercise3
+    4.1.textures
+    4.2.textures_combined
+    4.4.textures_exercise2
+    4.5.textures_exercise3
     # 4.6.textures_exercise4
     # 5.1.transformations
     # 5.2.transformations_exercise2
@@ -177,6 +177,11 @@ set(LIBS ${LIBS} STB_IMAGE)
 
 add_library(GLAD "src/glad.c")
 set(LIBS ${LIBS} GLAD)
+
+# https://github.com/childhood/libSOIL
+# make,make install，并将编译产物丢入lib中
+set(LIBS ${LIBS} "SOIL")
+
 
 macro(makeLink src dest target)
   add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${dest}  DEPENDS  ${dest} COMMENT "mklink ${src} -> ${dest}")

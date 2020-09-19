@@ -31,6 +31,10 @@ class GDShader {
 
         }
         
+        bool isValidProgram() {
+            return shaderProgram > 0;
+        }
+
         void use() {
             glUseProgram(shaderProgram);
         }
