@@ -18,19 +18,112 @@ bool doInitBeforeGLRenderLoop();
 void doReleaseAfterRenderLoop();
 
 static GDCamera gdCamera(glm::vec3(0.0f, 0.0f, 3.0f));
+float vertices[] = {
+//     ---- 位置 ----      - 法向量 -
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
 
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+};
+
+static GDShader* gdShader = NULL;
+static GLuint vao = 0;
+static GLuint vbo = 0;
 bool doInitBeforeGLRenderLoop() {
-
+    gdShader = new GDShader("2.2.shader.vs", "2.2.shader.fs");
+    if( gdShader == NULL ) {
+        return false;
+    }
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     return true;
 }
 
 void onRender() {
     glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+
+    glm::mat4 eye = glm::mat4(1.0f);
+
+    glm::mat4 model = glm::translate(eye, glm::vec3(0.0f, 0.0f, -2.0f));
+    //model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, -1.0f, 1.0f));
+    glUniformMatrix4fv(glGetUniformLocation(gdShader->getShaderProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glm::mat4 view = gdCamera.getViewMatrix();
+    glUniformMatrix4fv(glGetUniformLocation(gdShader->getShaderProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glm::mat4 projection = glm::perspective(45.0f, (GLfloat)SCR_WIDTH/SCR_HEIGHT, 1.0f, 100.0f);
+    glUniformMatrix4fv(glGetUniformLocation(gdShader->getShaderProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "lightColor"), 1, glm::value_ptr(lightColor));
+    glm::vec3 objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
+    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "objectColor"), 1, glm::value_ptr(objectColor));
+
+    glm::vec3 viewPos = gdCamera.getPosition();
+    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "viewPos"), 1, glm::value_ptr(viewPos));
+
+    // 灯光位置
+    glm::vec3 lightPos = glm::vec3(2.0f*sin(glfwGetTime()), 2.0f*cos(glfwGetTime()), 6.0f);
+    // glm::vec3 lightPos = gdCamera.getPosition();
+    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "lightPos"), 1, glm::value_ptr(lightPos));
+
+    glBindVertexArray(vao);
+    gdShader->use();
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
 }
 
 void doReleaseAfterRenderLoop() {
-
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+    glDeleteProgram(gdShader->getShaderProgram());
+    delete gdShader;
 }
 
 bool keys[1024];

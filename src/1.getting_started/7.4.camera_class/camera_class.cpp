@@ -86,7 +86,7 @@ float vertices[] = {
 
 GLuint vao, vbo;
 GLuint textures[2] = {0, 0};
-GDCamera gdCamera(glm::vec3(0.0f, 0.0f, -3.0f));
+GDCamera gdCamera(glm::vec3(0.0f, 0.0f, 3.0f));
 GDShader* gdShader = NULL;
 bool doInitBeforeGLRenderLoop() {
     gdShader = new GDShader("7.4.shader.vs", "7.4.shader.fs");

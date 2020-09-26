@@ -55,8 +55,8 @@ else()
 endif(WIN32)
 
 set(CHAPTERS
-    1.getting_started
-    # 2.lighting
+    # 1.getting_started
+    2.lighting
     # 3.model_loading
     # 4.advanced_opengl
     # 5.advanced_lighting
@@ -95,16 +95,16 @@ set(2.lighting
     1.colors
     2.1.basic_lighting_diffuse
     2.2.basic_lighting_specular
-    3.1.materials
-    3.2.materials_exercise1
-    4.1.lighting_maps_diffuse_map
-    4.2.lighting_maps_specular_map
-    4.4.lighting_maps_exercise4
-    5.1.light_casters_directional
-    5.2.light_casters_point
-    5.3.light_casters_spot
-    5.4.light_casters_spot_soft
-    6.multiple_lights
+    # 3.1.materials
+    # 3.2.materials_exercise1
+    # 4.1.lighting_maps_diffuse_map
+    # 4.2.lighting_maps_specular_map
+    # 4.4.lighting_maps_exercise4
+    # 5.1.light_casters_directional
+    # 5.2.light_casters_point
+    # 5.3.light_casters_spot
+    # 5.4.light_casters_spot_soft
+    # 6.multiple_lights
 )
 
 set(3.model_loading

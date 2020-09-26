@@ -14,8 +14,8 @@ enum CameraMovement {
 
 static const GLfloat YAW = -90.0f;
 static const GLfloat PITCH = 0.0f;
-static const GLfloat SPEED = 3.0f;
-static const GLfloat SENSITIVITY = 0.25f;
+static const GLfloat SPEED = 2.5f;
+static const GLfloat SENSITIVITY = 0.1f;
 static const GLfloat ZOOM = 45.0f;
 
 class GDCamera {
@@ -54,6 +54,10 @@ public:
         return glm::lookAt(this->position, this->position+this->front, this->up);
     }
 
+    glm::vec3 getPosition() {
+        return this->position;
+    }
+
     void pressKeyboard(CameraMovement direction, GLfloat deltaTime) {
         GLfloat velocity = this->movementSpeed * deltaTime;
         if( direction == FORWARD ) {
@@ -84,6 +88,7 @@ public:
                 this->pitch = -89.0f;
             }
         } 
+        //std::cout << "processMouseMovement, yaw:" << yaw << ", pitch: " << pitch << std::endl;
         this->updateCameraVectors();
     }
 private:
