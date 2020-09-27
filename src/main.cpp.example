@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include "SOIL.h"
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -17,6 +18,29 @@ void onRender();
 bool doInitBeforeGLRenderLoop();
 void doReleaseAfterRenderLoop();
 
+GLuint loadTexture(const char *imagePath) {
+    GLuint texture;
+    int w, h;
+    unsigned char* image = SOIL_load_image(imagePath, &w, &h, 0, SOIL_LOAD_RGB);
+    if( image == NULL ) {
+        std::cout << "load image fail: " << imagePath << std::endl;
+        return 0;
+    }
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    
+    SOIL_free_image_data(image);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return texture;
+}
+
 static GDCamera gdCamera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 bool doInitBeforeGLRenderLoop() {
@@ -26,7 +50,8 @@ bool doInitBeforeGLRenderLoop() {
 
 void onRender() {
     glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void doReleaseAfterRenderLoop() {

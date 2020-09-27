@@ -6,6 +6,8 @@
 #include <sstream>
 #include <iostream>
 #include <glad/glad.h>
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 class GDShader {
     private:
@@ -42,6 +44,27 @@ class GDShader {
         GLuint getShaderProgram() {
             return shaderProgram;
         }
+
+        void setVec3(const GLchar* name, glm::vec3 &vec) {
+            GLint location = glGetUniformLocation(shaderProgram, name);
+            glUniform3fv(location, 1, glm::value_ptr(vec));
+        }
+
+        void setFloat(const GLchar* name, GLfloat v) {
+            GLint location = glGetUniformLocation(shaderProgram, name);
+            glUniform1f(location, v);
+        }
+
+        void setMat4(const GLchar* name, glm::mat4 &mat) {
+            GLint location = glGetUniformLocation(shaderProgram, name);
+            glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat));
+        }
+
+        void setSampler2D(const GLchar* name, GLint i) {
+            GLuint location = glGetUniformLocation(shaderProgram, name);
+            glUniform1i(location, i);
+        }
+        
         ~GDShader() {
             if( shaderProgram != 0 ) {
                 glDeleteProgram(shaderProgram);

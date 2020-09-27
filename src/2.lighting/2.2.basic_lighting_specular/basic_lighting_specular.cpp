@@ -90,6 +90,8 @@ void onRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
+    gdShader->use();
+
     glm::mat4 eye = glm::mat4(1.0f);
 
     glm::mat4 model = glm::translate(eye, glm::vec3(0.0f, 0.0f, -2.0f));
@@ -114,7 +116,7 @@ void onRender() {
     glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "lightPos"), 1, glm::value_ptr(lightPos));
 
     glBindVertexArray(vao);
-    gdShader->use();
+    
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 }

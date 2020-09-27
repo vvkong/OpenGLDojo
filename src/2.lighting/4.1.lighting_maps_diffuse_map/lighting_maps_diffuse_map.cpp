@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include "stb_image.h"
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -17,58 +18,101 @@ void onRender();
 bool doInitBeforeGLRenderLoop();
 void doReleaseAfterRenderLoop();
 
+GLuint loadTexture(const char *imagePath) {    
+    int width, height, nrComponents;
+    unsigned char *image = stbi_load(imagePath, &width, &height, &nrComponents, 0);
+    if( image == NULL ) {
+        std::cout << "load image fail: " << imagePath << std::endl;
+        return 0;
+    }
+    
+    GLenum format;
+    if (nrComponents == 1)
+        format = GL_RED;
+    else if (nrComponents == 3)
+        format = GL_RGB;
+    else if (nrComponents == 4)
+        format = GL_RGBA;
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    stbi_image_free(image);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return texture;
+}
+
+
 static GDCamera gdCamera(glm::vec3(0.0f, 0.0f, 3.0f));
-float vertices[] = {
-//     ---- 位置 ----      - 法向量 -
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-    0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-    0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-    0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-    0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-    0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-    0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+GLfloat vertices[] = {
+    // Positions          // Normals           // Texture Coords
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+    0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+    0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
 
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+    0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+    0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+    0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
 
-    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-    0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-    0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-    0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-    0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-    0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-    0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-    0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+    0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-    0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-    0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+    0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+    0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+    0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+    0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+    0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+    0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 };
-
 static GDShader* gdShader = NULL;
-static GLuint vao = 0;
-static GLuint vbo = 0;
+GLuint vao = 0;
+GLuint vbo = 0;
+GLuint texture = 0;
+void releaseProgram() {
+    if( gdShader != NULL ) {
+        glDeleteProgram(gdShader->getShaderProgram());
+        delete gdShader;
+    }
+}
 bool doInitBeforeGLRenderLoop() {
-    gdShader = new GDShader("3.1.shader.vs", "3.1.shader.fs");
-    if( gdShader == NULL ) {
+    gdShader = new GDShader("4.1.shader.vs", "4.1.shader.fs");
+    if( !gdShader->isValidProgram() ) {
+        return false;
+    }
+    texture = loadTexture("../../resources/textures/container2.png");
+    if( texture == 0 ) {
+        releaseProgram();
         return false;
     }
     glGenVertexArrays(1, &vao);
@@ -76,12 +120,16 @@ bool doInitBeforeGLRenderLoop() {
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
+
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     return true;
 }
 
@@ -89,69 +137,48 @@ void onRender() {
     glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
-
-    glm::mat4 eye(1.0f);
-    glm::mat4 model(1.0f);
-    glUniformMatrix4fv(glGetUniformLocation(gdShader->getShaderProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glm::mat4 view = gdCamera.getViewMatrix();
-    glUniformMatrix4fv(glGetUniformLocation(gdShader->getShaderProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glm::mat4 projection = glm::perspective(45.0f, (GLfloat)SCR_WIDTH/SCR_HEIGHT, 0.1f, 100.0f);
-    glUniformMatrix4fv(glGetUniformLocation(gdShader->getShaderProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-
-    glm::vec3 lightColor; 
-    lightColor.x = sin(glfwGetTime() * 2.0f);
-    lightColor.y = sin(glfwGetTime() * 0.7f);
-    lightColor.z = sin(glfwGetTime() * 1.3f);
-
-    glm::vec3 materialAmbient = lightColor * glm::vec3(0.2f);
-    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "material.ambient"), 1, glm::value_ptr(materialAmbient));
-    glm::vec3 materialDiffuse = lightColor * glm::vec3(0.3f);
-    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "material.diffuse"), 1, glm::value_ptr(materialDiffuse));
-    glm::vec3 materialSpecular(0.5f, 0.5f, 0.5f);
-    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "material.specular"), 1, glm::value_ptr(materialSpecular));
-    
-    glUniform1f(glGetUniformLocation(gdShader->getShaderProgram(), "material.shininess"), 64.0f);
-    
-    
-    glm::vec3 lightAmbient(0.2f, 0.2f, 0.2f);
-    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "light.ambient"), 1, glm::value_ptr(lightAmbient));
-    glm::vec3 lightDiffuse(0.5f, 0.5f, 0.5f);
-    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "light.diffuse"), 1, glm::value_ptr(lightDiffuse));
-    glm::vec3 lightSpecular(1.0f, 1.0f, 1.0f);
-    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "light.specular"), 1, glm::value_ptr(lightSpecular));
-    
-    glm::vec3 lightPosition(1.0f, 1.0f, 3.0f);
-    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "light.position"), 1, glm::value_ptr(lightPosition));
-    
-
-    
-    // glm::vec3 lightColor(2.0f, -2.0f, 2.0f);
-    // glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "lightColor"), 1, glm::value_ptr(lightColor));
-    // glm::vec3 objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
-    // glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "objectColor"), 1, glm::value_ptr(objectColor));
-
-    // 灯光位置
-    //glm::vec3 lightPos = glm::vec3(2.0f*sin(glfwGetTime()), 2.0f*cos(glfwGetTime()), 6.0f);
-    // glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
-    // glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "lightPos"), 1, glm::value_ptr(lightPos));
-
-    // 观察者位置
-    glm::vec3 viewPos = gdCamera.getPosition();
-    glUniform3fv(glGetUniformLocation(gdShader->getShaderProgram(), "viewPos"), 1, glm::value_ptr(viewPos));
-
-    
-    glBindVertexArray(vao);
     gdShader->use();
+   
+    glm::mat4 model(1.0f);
+    gdShader->setMat4("model", model);
+    glm::mat4 view = gdCamera.getViewMatrix();
+    gdShader->setMat4("view", view);
+    glm::mat4 projection = glm::perspective(45.0f, (GLfloat)SCR_WIDTH/(GLfloat)SCR_HEIGHT, 0.1f, 100.0f);
+    gdShader->setMat4("projection", projection);
+
+    // 激活绑定纹理
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    gdShader->setSampler2D("material.diffuse", 0);
+
+    glm::vec3 materialSpecular(0.5f, 0.5f, 0.5f);
+    gdShader->setVec3("material.specular", materialSpecular);
+    gdShader->setFloat("material.shininess", 64.0f);
+
+    glm::vec3 lightAmbient(0.2f, 0.2f, 0.2f);
+    gdShader->setVec3("light.ambient", lightAmbient);
+    glm::vec3 lightDiffuse(0.5f, 0.5f, 0.5f);
+    gdShader->setVec3("light.diffuse", lightDiffuse);
+    glm::vec3 lightSpecular(1.0f, 1.0f, 1.0f);
+    gdShader->setVec3("light.specular", lightSpecular);
+
+    glm::vec3 lightPosition(1.0f, 1.0f, 3.0f);
+    gdShader->setVec3("light.position", lightPosition);
+
+    glm::vec3 viewPos = gdCamera.getPosition();
+    gdShader->setVec3("viewPos", viewPos);
+
+    glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
+    glBindVertexArray(0); 
+    glBindTexture(GL_TEXTURE_2D, 0);  
 }
 
 void doReleaseAfterRenderLoop() {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
-    glDeleteProgram(gdShader->getShaderProgram());
-    delete gdShader;
+    glDeleteTextures(1, &texture);
+    releaseProgram();
 }
 
 bool keys[1024];
