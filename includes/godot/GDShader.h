@@ -49,6 +49,10 @@ class GDShader {
             GLint location = glGetUniformLocation(shaderProgram, name);
             glUniform3fv(location, 1, glm::value_ptr(vec));
         }
+        void setVec3(const GLchar* name, GLfloat v0, GLfloat v1, GLfloat v2) {
+            GLint location = glGetUniformLocation(shaderProgram, name);
+            glUniform3f(location, v0, v1, v2);
+        }
 
         void setFloat(const GLchar* name, GLfloat v) {
             GLint location = glGetUniformLocation(shaderProgram, name);

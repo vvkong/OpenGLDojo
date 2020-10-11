@@ -107,6 +107,12 @@ glm::vec3 cubePositions[] = {
     glm::vec3( 1.5f,  0.2f, -1.5f),
     glm::vec3(-1.3f,  1.0f, -1.5f)
 };
+glm::vec3 pointLightPositions[] = {
+    glm::vec3( 0.7f,  0.2f,  2.0f),
+    glm::vec3( 2.3f, -3.3f, -4.0f),
+    glm::vec3(-4.0f,  2.0f, -12.0f),
+    glm::vec3( 0.0f,  0.0f, -3.0f)
+};
 static GDShader* gdShader = NULL;
 GLuint vao = 0;
 GLuint vbo = 0;
@@ -120,7 +126,7 @@ void releaseProgram() {
     }
 }
 bool doInitBeforeGLRenderLoop() {
-    gdShader = new GDShader("5.4.shader.vs", "5.4.shader.fs");
+    gdShader = new GDShader("6.0.shader.vs", "6.0.shader.fs");
     if( !gdShader->isValidProgram() ) {
         return false;
     }
@@ -191,20 +197,57 @@ void onRender() {
     gdShader->setVec3("material.specular", materialSpecular);
     gdShader->setFloat("material.shininess", 32.0f);
 
+    // 平行光
+    gdShader->setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+    gdShader->setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+    gdShader->setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    gdShader->setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+    
+    // 点光源
+    // Point light 1
+    gdShader->setVec3( "pointLights[0].position", pointLightPositions[0].x, pointLightPositions[0].y, pointLightPositions[0].z);
+    gdShader->setVec3( "pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+    gdShader->setVec3( "pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+    gdShader->setVec3( "pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+    gdShader->setFloat( "pointLights[0].constant", 1.0f);
+    gdShader->setFloat( "pointLights[0].linear", 0.09);
+    gdShader->setFloat( "pointLights[0].quadratic", 0.032);
+    // Point light 2
+    gdShader->setVec3( "pointLights[1].position", pointLightPositions[1].x, pointLightPositions[1].y, pointLightPositions[1].z);
+    gdShader->setVec3( "pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+    gdShader->setVec3( "pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+    gdShader->setVec3( "pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+    gdShader->setFloat( "pointLights[1].constant", 1.0f);
+    gdShader->setFloat( "pointLights[1].linear", 0.09);
+    gdShader->setFloat( "pointLights[1].quadratic", 0.032);
+    // Point light 3
+    gdShader->setVec3( "pointLights[2].position", pointLightPositions[2].x, pointLightPositions[2].y, pointLightPositions[2].z);
+    gdShader->setVec3( "pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+    gdShader->setVec3( "pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+    gdShader->setVec3( "pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+    gdShader->setFloat( "pointLights[2].constant", 1.0f);
+    gdShader->setFloat( "pointLights[2].linear", 0.09);
+    gdShader->setFloat( "pointLights[2].quadratic", 0.032);
+    // Point light 4
+    gdShader->setVec3( "pointLights[3].position", pointLightPositions[3].x, pointLightPositions[3].y, pointLightPositions[3].z);
+    gdShader->setVec3( "pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
+    gdShader->setVec3( "pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
+    gdShader->setVec3( "pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+    gdShader->setFloat( "pointLights[3].constant", 1.0f);
+    gdShader->setFloat( "pointLights[3].linear", 0.09);
+    gdShader->setFloat( "pointLights[3].quadratic", 0.032);
+
+    // 聚光灯，手电筒
     // glm::vec3 lightAmbient(0.2f, 0.2f, 0.2f);
     // gdShader->setVec3("light.ambient", lightAmbient);
-    gdShader->setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
     // glm::vec3 lightDiffuse(0.5f, 0.5f, 0.5f);
     // gdShader->setVec3("light.diffuse", lightDiffuse);
-    gdShader->setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
     // glm::vec3 lightSpecular(1.0f, 1.0f, 1.0f);
     // gdShader->setVec3("light.specular", lightSpecular);
-    gdShader->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-
-    gdShader->setVec3("light.position", gdCamera.position);
-    gdShader->setVec3("light.direction", gdCamera.front);
-    gdShader->setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
-    gdShader->setFloat("light.outerCutOff", glm::cos(glm::radians(25.0f)));
+    // gdShader->setVec3("light.position", gdCamera.position);
+    // gdShader->setVec3("light.direction", gdCamera.front);
+    // gdShader->setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+    // gdShader->setFloat("light.outerCutOff", glm::cos(glm::radians(25.0f)));
 
     
 
